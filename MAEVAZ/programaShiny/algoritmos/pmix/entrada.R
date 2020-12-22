@@ -11,8 +11,12 @@ entrada = function (serieH) {
   serieHN = t ((t (serieHL) - mediaHL) / dpHL)
   
   lagANUAL = lagAnualSignificativo (serieAnualH)
+  # print(lagANUAL)
   lagMENSAL = lagMensalSignificativo (serieH())
+  # print(lagMENSAL)
   facAnualH = autocorrelacaoAnual (serieAnualH, 12)
+  # print("entrada")
+  # print(facAnualH)
   facMensalH = autocorrelacaoMensal (serieH(), 12)
   
   final = list (serieH = serieH, mediaH = mediaH, dpH = dpH, lagAnual = lagANUAL, lagMensal = lagMENSAL, facAnualH = facAnualH, facMensalH = facMensalH,

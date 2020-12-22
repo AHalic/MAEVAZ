@@ -13,9 +13,9 @@ NSGA = function (serieH, lags, nP, Pc, Pm, cicloMAX, MAXDiferenca, nS) {
   # print(populacao)
   ciclo = 0
   
-  print(populacao)
+  # print(populacao)
   # print(MAPEdiferenca(populacao))
-  # print(MAXDiferenca)
+  print(MAXDiferenca)
   while ((ciclo < cicloMAX) && (MAPEdiferenca (populacao) > MAXDiferenca)) {
     ciclo = ciclo + 1
     novaPopulalacao = geraCruzamento (entrada, lags, populacao, Pc, Pm, nP, nS)
@@ -45,7 +45,9 @@ MAPEdiferenca = function (populacao) {
   
   MAPE = lapply (populacao, function (x)
                                    abs ((individuo - x$individuo) / individuo))
+  print(MAPE)
   MAPEdif = sum (unlist (MAPE)) / (nP * (length (individuo)))
+  print(MAPEdif)
   
   if (is.finite (MAPEdif))
     return (MAPEdif)

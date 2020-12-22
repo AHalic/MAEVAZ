@@ -7,15 +7,17 @@
 # idEstacao: id da estacao que gerou a serie sintetica
 # Return: retorna o id da serie cadastrada na table serie_sintetica
 
-registrarSSARMA <- function(p,q,nsint,idEstacao){
+registrarSSARMA <- function(p,q,nsint,idEstacao, tipo){
   
   db <- conectarDataBase()
   
   modelo <- "ARMA"
   anos <- nsint
   lags <- (paste("(",p,",",q,")",sep=""))
-  metodo <- "Metodo dos Momentos"
-  
+  if(tipo == 1)
+    metodo <- "Metodo dos Momentos"
+  if(tipo == 2)
+    metodo <- "Algoritmo genético"
   query <-  paste("INSERT INTO SERIE_SINTETICA VALUES(NULL,'",modelo,"',",anos,",'",lags,"','",metodo,"',CURRENT_TIMESTAMP(),",idEstacao,")",sep="")
   data <- dbGetQuery(db, query)
   

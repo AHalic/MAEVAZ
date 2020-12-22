@@ -11,9 +11,13 @@ momentos = function (entrada, parametros, lags, nS) {
   serieSint = exp (serieSint)
   
   media = apply (serieSint, 2, mean)
+  # print(serieSint)
+  # print(media)
   dp = apply (serieSint, 2, sd)
+  # print(dp)
   serieAnual = apply (serieSint, 1, sum)
   facAnual = autocorrelacaoAnual (serieAnual, entrada$lagAnual)[-1]
+  # print(facAnual)
   facMensal = autocorrelacaoMensal (serieSint, entrada$lagMensal)[-1, ]
   somRes = residuos$somRes
   

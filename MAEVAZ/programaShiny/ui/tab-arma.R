@@ -37,7 +37,6 @@ TabARMA = tabPanel("Modelo ARMA",
                    ),
                    fluidRow(
                      column (width = 6,numericInput ("lagAnualArma", label = "lag Anual", value = 1, min = 1, max = 12)),
-                     column(width = 6,numericInput ("lagMensalArma", label = "lag Mensal", value = 1, min = 1, max = 12))
                    ),
                    checkboxInput ("lagSignificativoArma", "Lag Significativo", TRUE)
                )),
@@ -63,7 +62,7 @@ TabARMA = tabPanel("Modelo ARMA",
                    shinyjs::hidden(
                      div(id="plotly_avaliacoes_arma",
                          hr(),
-                         h4 (strong ("Grafico: MAPEfacAnual x MAPEfacMensal x MAPE dp"),align = "center"),
+                         h4 (strong ("Grafico: MAPEfacAnual x MAPEdesvio x MAPEmédia"),align = "center"),
                          plotlyOutput(outputId = "grafico_avaliacoes_arma"))
                    ),
                    selectInput ("nSerieArma", "Serie a ser analisada:", choices = 1:50, selected = 50),

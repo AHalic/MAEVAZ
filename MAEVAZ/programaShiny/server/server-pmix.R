@@ -141,7 +141,9 @@ observeEvent(input$iniciar,{
     dados$X = 1:nrow(dados)
     dd = replicate(2, dados, simplify = F)
     dd[[2]]$MAPEdp = 0
+    print(dd)
     d = group2NA(dplyr::bind_rows(dd), "X")
+    print(d)
     
     plot_ly(color = I("orange"), showlegend = F, text = ~X,
             hovertemplate = paste(

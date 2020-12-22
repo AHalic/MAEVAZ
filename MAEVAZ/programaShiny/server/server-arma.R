@@ -51,7 +51,7 @@ serieSint_ARMA = reactive ({
   
   return (serieSint)
 })
-# serieSint_ARMA = reactive(resultados_ARMA()$serieSintetica)
+
 
 # Avaliacao da serie sintetica gerada pelo modelo ARMA
 avaliacaoAnualARMA <- callModule(avaliacaoAnual,"ARMA",serieHistAnual_ARMA,serieSint_ARMA)
@@ -81,27 +81,28 @@ observeEvent(input$goButton_ARMA,{
   if(input$type == 2){
     showTab(inputId = "tabs", target = "Avaliação séries")
     shinyjs::show("plotly_avaliacoes_arma")
+    
     output$grafico_avaliacoes_arma = renderPlotly({
-    # dados = data.frame (resultados_ARMA( )$avaliacao)
-    # dados$X = 1:nrow(dados)
-    # dd = replicate(2, dados, simplify = F)
-    # dd[[2]]$MAPEdesvio = 0
-    # d = group2NA(dplyr::bind_rows(dd), "X")
-    # 
-    #     plot_ly(color = I("orange"), showlegend = F, text = ~X,
-    #             hovertemplate = paste(
-    #               "<b>Serie: %{text}</b><br>",
-    #               "MAPEfacAnual: %{x}<br>",
-    #               "MAPEfacMensal: %{y}<br>",
-    #               "MAPEdp: %{z}",
-    #               "<extra></extra>"
-    #             )) %>%
-    #       add_markers(data = dados, x = ~MAPEfacAnual, y = ~MAPEfacMensal, z = ~MAPEdp) %>%
-    #       add_paths(data = d, x = ~MAPEfacAnual, y = ~MAPEfacMensal, z = ~MAPEdp)
+      dadosArma = data.frame (resultados_ARMA( )$avaliacao)
+  
+      dadosArma$X = 1:nrow(dadosArma)
+      ddArma = replicate(2, dadosArma, simplify = F)
+
+      plot_ly(color = I("blue"), showlegend = F, text = ~X,
+              hovertemplate = paste(
+                "<b>Serie: %{text}</b><br>",
+                "facAnual: %{x}<br>",
+                "MAPEMedia: %{y}<br>",
+                "MAPEDesvio: %{z}",
+                "<extra></extra>"
+              )) %>%
+        add_markers(data = dadosArma, x = ~facAnual, y = ~MAPEMedia, z = ~MAPEDesvio)
     })
+
+    
     output$tabelaAvaliacaoArma = renderDataTable({
       avaliacoesarma = data.frame (resultados_ARMA( )$avaliacao)
-      colnames (avaliacoesarma) = c ("MAPE media", "MAPE desvio")
+      colnames (avaliacoesarma) = c ("MAPE media", "MAPE desvio", "Fac Anual")
       rownames(avaliacoesarma) = paste("Serie", 1:input$nPopArma)
       return (datatable (avaliacoesarma))
     })
@@ -155,7 +156,7 @@ observeEvent(input$armazenarButton_ARMA,{
     acfAnual = data.frame (as.vector (acfAnualARMA()[-1]))  
     
     idEstacao_ARMA <- findID(estacao,input$estacoes_ARMA)
-    idSERIE_SINTETICA <- registrarSSARMA(p_ARMA,q_ARMA,nAnos_ARMA,idEstacao_ARMA)
+    idSERIE_SINTETICA <- registrarSSARMA(p_ARMA,q_ARMA,nAnos_ARMA,idEstacao_ARMA, input$type)
     inserirSS_ARMA(idSERIE_SINTETICA, serieSint_ARMA())
     inserirAvaliacaoSS_ARMA(idSERIE_SINTETICA,MediaArmazenar,DesvioArmazenar,AssimetriaArmazenar,KurtArmazenar,CoefVarArmazenar)
     inserirACF_ANUALSS(idSERIE_SINTETICA,acfAnual)

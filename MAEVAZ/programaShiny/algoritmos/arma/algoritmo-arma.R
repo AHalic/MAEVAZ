@@ -6,13 +6,23 @@ cenarioSinteticoAnual = function (serieH, lags, n, tipo, ag) {
   
   
   serieAnualH = apply (serieH, 1, sum)
+  
   serieHL = log (serieAnualH)
   mediaHL = mean (serieHL)
-  
   dpHL = sd (serieHL)
-  dpH = sd(serieH)
-  mediaH = mean(serieH)
-  # falta lag anual e fac anual
+  
+  dpH = sd(serieAnualH)
+  mediaH = mean(serieAnualH)
+  
+
+  #  TODO verificar lag
+  lagmax = lagAnualSignificativo(serieAnualH)
+  facAnualH = acf (serieAnualH, lag.max = 12, type = c ("correlation"), plot = F, na.action = na.pass)
+  facAnualH = as.numeric (facAnualH$acf)
+  facAnualH = facAnualH[2]
+  entrada = list(dpH = dpH, mediaH = mediaH, serie = serieAnualH, facAnualH = facAnualH,
+                  dpHL = dpHL, mediaHL = mediaHL, lagmax = lagmax, mapeMax = ag[5])
+  
   serieHN = (serieHL - mediaHL) / dpHL
   
   
@@ -32,32 +42,29 @@ cenarioSinteticoAnual = function (serieH, lags, n, tipo, ag) {
     return (final)
   }
   if(tipo == 2){
-    modelo = AG_ARMA(serieHN, lags, ag, n)
+    modelo = AG_ARMA(serieHN, lags, ag, n, entrada)
     parametros = modelo$population
     
     tampop = 1:ag[1]
     serieS = lapply(tampop, function(x) 
-                      residuos_ARMA(serieHN, parametros[x, ], lags, n, 1))
+                      residuos_ARMA(serieHN, parametros[x, ], lags, n, 1, entrada))
     
     residuo = lapply(tampop, function(x) 
                                 serieS[[x]]$residuo)
     serie = list()
-    serie = lapply(tampop, function(x) 
-                            (serieS[[x]]$serieS)* dpHL + mediaHL)
-    mediaS = lapply(serie, mean)
-    dpS = lapply(serie, sd)
-    
-    serie = lapply(tampop, function(x) 
-                  exp(serie[[x]]))
+    serie = lapply(tampop, function(x)
+                            (serieS[[x]]$serieS))
 
-    
-    entradaH = list(dpH = dpH, mediaH = mediaH)
-    avaliacaoga = sapply(tampop, function(x) avaliacoes(entradaH, serie[[x]], mediaS[[x]], dpS[[x]]))
+    mediaS = sapply(serie, mean)
+    dpS = sapply(serie, sd)
+ 
+  
+    avaliacaoga = sapply(tampop, function(x) avaliacoes(entrada, serieS[[x]]$serieS, mediaS[[x]], dpS[[x]]))
 
     avaliacaoga = t(avaliacaoga)
     
     avaliacaoga = data.frame (avaliacaoga)
-
+    
     final = list (serieSintetica = serie, parametros = parametros, residuos = residuo, avaliacao = avaliacaoga)
     return(final)
   }
@@ -121,7 +128,8 @@ serieSinteticaAnual = function (parametros, dpRes, c, lags, n) {
 }
 
 
-residuos_ARMA = function(serie, parametros, lags, n, t){
+residuos_ARMA = function(serie, parametros, lags, n, t, entrada){
+  
   p = lags[1]
   q = lags[2]
 
@@ -165,57 +173,58 @@ residuos_ARMA = function(serie, parametros, lags, n, t){
   
   serieS = serieSinteticaAnual(parametros, dpRes, constante, lags, n)
   
+  serieS = serieS* entrada$dpHL + entrada$mediaHL
+  
+  serieS = exp(serieS)
+
+  
   
   if(t == 1){
     final = list(dpRes = dpRes, somQuadRes = somQuadRes, residuo = residuo, serieS = serieS)
     return(final)
   }
   
-  meanSerie = mean(serie)
+  mediaH = entrada$mediaH
+  
+  media = mean(serieS)
+
+  # TODO essas medias tao mt zoadas
+  MAPEMedia = mean(abs ((entrada$mediaH - media) / entrada$mediaH))
+
 }
 
 
-AG_ARMA = function(serieHN, lags, ag, n){
+AG_ARMA = function(serieHN, lags, ag, n, entrada){
   
   tampop = ag[1]
   ciclomax = ag[2]
   probC = ag[3]
   probM = ag[4]
-  # mapedMax = ag[5]
-  # mapeAv = ag[6]
-  # lagA = ag[7]
-  # lagM = ag[8]
-  # lagSign = ag[9]
+  
+
   inicio = arima0 (ts (serieHN), order = c (lags[1], 0, lags[2]), 
                    seasonal = list (order = c (0, 0, 0), period = NA), 
                    xreg = NULL, include.mean = TRUE, delta = 0.01, 
                    transform.pars = TRUE, fixed = NULL, init = NULL, method = "ML")
   parametros = as.vector (inicio$coef)
-  # constante = parametros[length(parametros)]
+  
   parametros = parametros[-length(parametros)]
-  # dpRes = sqrt (inicio$sigma2)
-  # residual = inicio$residuals
   
   low = c()
   up = c()
   for(i in 1:length(parametros)){
-    low = append(low, -1)
-    up = append(up, 1)
+    low = append(low, -0.5)
+    up = append(up, 0.5)
   }
-  # print(low)
-  # print(residuos_ARMA(serieHN, parametros, lags, n))
-  silent = capture.output({
-    modelo = ga(type = "real-valued", fitness = function(x) residuos_ARMA(serieHN, x, lags, n, 0), lower = low, upper = up, popSize = tampop, 
-                maxiter = ciclomax, pcrossover = probC/100, pmutation = probM/100, 
-                suggestions = parametros, run = 10) 
-  })
 
-  # print(modelo@population)
-  # residuos_ARMA(serieHN, modelo@population[1, ], lags, n)
   
-  # print(residuos_ARMA(serieHN, parametros, lags, n, 1))
-  
-  # cat('\f')
+    silent = capture.output({
+      modelo = ga(type = "real-valued", fitness = function(x) -residuos_ARMA(serieHN, x, lags, n, 0, entrada), lower = low, upper = up, popSize = tampop, 
+                  maxiter = ciclomax, pcrossover = probC/100, pmutation = probM/100, 
+                  suggestions = parametros, run = 10, keepBest = TRUE) 
+    })
+
+
   final = list(population = modelo@population)
   return(final)
 }
@@ -223,19 +232,23 @@ AG_ARMA = function(serieHN, lags, ag, n){
 avaliacoes = function(entrada, sintetico, media, dp){
   mediaH = entrada$mediaH
   dpH = entrada$dpH
+  facAnualH = entrada$facAnualH
+  serie = entrada$serie
     
-  # print(sintetico)
-  # print(mediaH)
+  facAnual = acf (sintetico, lag.max = entrada$lagmax, type = c ("correlation"), plot = F, na.action = na.pass)
+  facAnual = as.numeric (facAnual$acf)
+  facAnual = facAnual[2]
+  
+  
   # print(media)
+  MAPEMedia = abs ((mediaH - media) / mediaH)
+  MAPEDesvio = abs ((dpH - dp)) / dpH
+  # TODO esses valores tao horriveis
   
   
-  MAPEMedia = sum (abs ((mediaH - media) / mediaH)) / 12
-  MAPEDesvio = sum (abs ((dpH - dp)) / dpH) / 12
+  MAPEFacAnual = sum(abs((facAnualH - facAnual) / facAnualH))/entrada$lagmax
+
   
-  # print(MAPEMedia)
-  
-  final = list(MAPEMedia = MAPEMedia, MAPEDesvio = MAPEDesvio)
-  # print(MAPEMedia)
-  # print(MAPEDesvio)
+  final = list(MAPEMedia = MAPEMedia, MAPEDesvio = MAPEDesvio, facAnual = MAPEFacAnual)
   return(final)
 }

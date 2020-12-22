@@ -28,7 +28,7 @@ algoritmo = function (input,serieH) {
     parametros = arquivos$arquivoParametros
     series = lapply(arquivos$arquivosSeries, as.matrix)
     avaliacoes = arquivos$arquivoAvaliacoes
-    print(avaliacoes)
+    # print(avaliacoes)
     algoritmo = list (ciclos = arquivos$ciclos)
   }
   
