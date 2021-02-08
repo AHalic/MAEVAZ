@@ -35,7 +35,7 @@ div_mensais<-function(sH)
   anos = as.character(sH$periodo)
   anos = substr(anos, nchar(anos)-4+1, nchar(anos))
   anos = unique(anos)
-  anos = sort(anos)                                       
+  anos = sort(anos)      
   
   #Nomeia linhas e colunas e converte a matriz em um dataframe
   row.names(serie_hist)= anos

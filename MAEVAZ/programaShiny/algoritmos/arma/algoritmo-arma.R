@@ -9,6 +9,7 @@ cenarioSinteticoAnual = function (serieH, lags, n, tipo, ag) {
   
   serieHL = log (serieAnualH)
   mediaHL = mean (serieHL)
+
   dpHL = sd (serieHL)
   
   dpH = sd(serieAnualH)
@@ -16,21 +17,24 @@ cenarioSinteticoAnual = function (serieH, lags, n, tipo, ag) {
   
 
   #  TODO verificar lag
-  lagmax = lagAnualSignificativo(serieAnualH)
-  facAnualH = acf (serieAnualH, lag.max = 12, type = c ("correlation"), plot = F, na.action = na.pass)
+  # lagmax = lagAnualSignificativo(serieAnualH)
+  
+  facAnualH = acf (serieAnualH, lag.max = ag[7], type = c ("correlation"), plot = F, na.action = na.pass)
   facAnualH = as.numeric (facAnualH$acf)
   facAnualH = facAnualH[2]
   entrada = list(dpH = dpH, mediaH = mediaH, serie = serieAnualH, facAnualH = facAnualH,
-                  dpHL = dpHL, mediaHL = mediaHL, lagmax = lagmax, mapeMax = ag[5])
+                  dpHL = dpHL, mediaHL = mediaHL, lagmax = ag[7], mapeMax = ag[5])
   
   serieHN = (serieHL - mediaHL) / dpHL
+
   
-  
+  modelo = ARMA (serieHN, lags)
   if(tipo == 1){
-    modelo = ARMA (serieHN, lags)
     parametros = modelo$parametros
 
     residuos = modelo$residuos
+    # print(residuos)
+    # print(sum(residuos * residuos))
     dpRes =  modelo$dpRes
     c = modelo$constante
     
@@ -42,12 +46,12 @@ cenarioSinteticoAnual = function (serieH, lags, n, tipo, ag) {
     return (final)
   }
   if(tipo == 2){
-    modelo = AG_ARMA(serieHN, lags, ag, n, entrada)
-    parametros = modelo$population
+    modeloGA = AG_ARMA(serieHN, lags, ag, n, entrada, modelo$parametros, modelo$constante)
+    parametros = modeloGA$population
     
     tampop = 1:ag[1]
     serieS = lapply(tampop, function(x) 
-                      residuos_ARMA(serieHN, parametros[x, ], lags, n, 1, entrada))
+                      residuos_ARMA(serieHN, parametros[x, ], lags, n, 1, entrada, modelo$constante))
     
     residuo = lapply(tampop, function(x) 
                                 serieS[[x]]$residuo)
@@ -72,22 +76,31 @@ cenarioSinteticoAnual = function (serieH, lags, n, tipo, ag) {
 }
 
 ARMA = function (serieAnual, lags) {
+
+  # TODO o intercept talvez seja na verdade a media, portanto
+  #  c = media*(1 - sum(parametros ar))
   modelo = arima0 (ts (serieAnual), order = c (lags[1], 0, lags[2]), seasonal = list (order = c (0, 0, 0), period = NA),
                   xreg = NULL, include.mean = TRUE, delta = 0.01, transform.pars = TRUE, fixed = NULL, init = NULL, method = "ML")
+  teste = auto.arima(serieAnual)
+  print(teste)
   
   parametros = as.vector (modelo$coef)
-  
+
   constante = parametros[length(parametros)]
   parametros = parametros[-length(parametros)]
+
+  
   dpRes = sqrt (modelo$sigma2)
+
   residual = modelo$residuals
   
   final = list (parametros = parametros, dpRes = dpRes, constante = constante, residuos = residual)
   return (final)
 }
 
+
 serieSinteticaAnual = function (parametros, dpRes, c, lags, n) {
-  
+
   p = lags[1]
   q = lags[2]
   
@@ -103,6 +116,10 @@ serieSinteticaAnual = function (parametros, dpRes, c, lags, n) {
     limSup = limInf + q - 1
     tht = parametros[limInf : limSup]
   }
+  
+  # TODO: a constante so é igual a media qnd ar != 0
+  if(p != 0)
+    c = c*(1- sum(phi))
   
   residuoS = rnorm (n)
   residuoS = (residuoS - mean (residuoS)) / sd (residuoS)
@@ -121,14 +138,16 @@ serieSinteticaAnual = function (parametros, dpRes, c, lags, n) {
       for (j in (1:q))
         mm = mm + tht[j]*residuoS[v-j]
     }
+    # TODO: mm n deveria estar subtraindo?
     serieS[v] = c + auto + mm + residuoS[v]
   }
-  
+  # print(mean(serieS))
+  # print(c)
   return (serieS)
 }
 
 
-residuos_ARMA = function(serie, parametros, lags, n, t, entrada){
+residuos_ARMA = function(serie, parametros, lags, n, t, entrada, constante){
   
   p = lags[1]
   q = lags[2]
@@ -145,8 +164,15 @@ residuos_ARMA = function(serie, parametros, lags, n, t, entrada){
     limSup = limInf + q - 1
     tht = parametros[limInf : limSup]
   }
+  
+  # TODO: a constante so é igual a media qnd ar != 0
+  if(p != 0)
+    c = constante*(1- sum(phi))
+  else
+    c = constante
 
   residuo = numeric (length (serie))
+
   serieAux = as.vector (t (serie))
   
 
@@ -156,75 +182,103 @@ residuos_ARMA = function(serie, parametros, lags, n, t, entrada){
     if (p > 0) {
       for (i in (1:p))
         auto = auto + phi[i]*serieAux[v-i]
+        # print(auto)
     }
     if (q > 0) {
       for (j in (1:q))
         mm = mm + tht[j]*residuo[v-j]
     }
-    residuo[v] = serieAux[v] + auto + mm
+    residuo[v] = serieAux[v] + auto + mm + c
   }
-  
-  
+
+
+
   dpRes = sd(residuo)
-  
-
+  # print(dpRes)
   somQuadRes = sum (residuo * residuo)
-  constante = parametros[length(parametros)]
-  
+  # print(somQuadRes)
   serieS = serieSinteticaAnual(parametros, dpRes, constante, lags, n)
-  
-  serieS = serieS* entrada$dpHL + entrada$mediaHL
-  
-  serieS = exp(serieS)
 
+  serieS = serieS* entrada$dpHL + entrada$mediaHL
+
+  serieS = exp(serieS)
   
-  
+  # print("---------")
+  # print(parametros)
+  # print(somQuadRes)
+  # print("---------")
+
   if(t == 1){
     final = list(dpRes = dpRes, somQuadRes = somQuadRes, residuo = residuo, serieS = serieS)
     return(final)
   }
-  
-  mediaH = entrada$mediaH
-  
-  media = mean(serieS)
 
-  # TODO essas medias tao mt zoadas
-  MAPEMedia = mean(abs ((entrada$mediaH - media) / entrada$mediaH))
-
+  if(t == 0){
+    mediaH = entrada$mediaH
+  
+    media = mean(serieS)
+  
+    MAPEMedia = mean(abs ((entrada$mediaH - media) / entrada$mediaH))
+  
+    return(MAPEMedia)
+  }
+  
+  return(somQuadRes)
 }
 
+post = function(x){
+  print(x@population) 
+  return(x)
+}
 
-AG_ARMA = function(serieHN, lags, ag, n, entrada){
-  
+AG_ARMA = function(serieHN, lags, ag, n, entrada, inicio, constante){
+  # print(constante)
+  # print(inicio)
   tampop = ag[1]
   ciclomax = ag[2]
   probC = ag[3]
   probM = ag[4]
   
 
-  inicio = arima0 (ts (serieHN), order = c (lags[1], 0, lags[2]), 
-                   seasonal = list (order = c (0, 0, 0), period = NA), 
-                   xreg = NULL, include.mean = TRUE, delta = 0.01, 
-                   transform.pars = TRUE, fixed = NULL, init = NULL, method = "ML")
-  parametros = as.vector (inicio$coef)
-  
-  parametros = parametros[-length(parametros)]
   
   low = c()
   up = c()
-  for(i in 1:length(parametros)){
-    low = append(low, -0.5)
-    up = append(up, 0.5)
+  for(i in 1:length(inicio)){
+    if(inicio[i] < 0){
+      low = append(low, inicio[i])
+      up = append(up, -inicio[i]) 
+    }
+    else{
+      low = append(low, -inicio[i])
+      up = append(up, inicio[i])   
+    }
+    # low = append(low, -1)
+    # up = append(up, 1) 
   }
-
   
-    silent = capture.output({
-      modelo = ga(type = "real-valued", fitness = function(x) -residuos_ARMA(serieHN, x, lags, n, 0, entrada), lower = low, upper = up, popSize = tampop, 
-                  maxiter = ciclomax, pcrossover = probC/100, pmutation = probM/100, 
-                  suggestions = parametros, run = 10, keepBest = TRUE) 
-    })
+  sugestao = matrix(inicio, ncol = length(inicio),  byrow = TRUE, nrow = tampop-1)
+ 
+    # TODO falta algo no ga
+  silent = capture.output({
+    modelo = ga(type = "real-valued", fitness = function(x) -residuos_ARMA(serieHN, x, lags, n, 2, entrada, constante), lower = low, upper = up, popSize = tampop, 
+                  maxiter = ciclomax, pcrossover = probC/100, pmutation = probM/100,
+                  suggestions = sugestao, run = 30, keepBest = TRUE, selection =  gareal_tourSelection)
+  })
 
+  # print(modelo)
+  print("------------------------------")
+  print(modelo@population)
+  print("------------------------------")
+  
 
+  modelo = ga(type = "real-valued", fitness = function(x) -residuos_ARMA(serieHN, x, lags, n, 0, entrada, constante), lower = low, upper = up, popSize = tampop, 
+              maxiter = ciclomax, pcrossover = probC/100, pmutation = probM/100,
+              suggestions = modelo@population, run = 70, keepBest = TRUE, selection =  gareal_tourSelection, monitor = NULL)
+  
+  print("------------------------------")
+  print(modelo@population)
+  print("------------------------------")
+  
   final = list(population = modelo@population)
   return(final)
 }
@@ -240,14 +294,13 @@ avaliacoes = function(entrada, sintetico, media, dp){
   facAnual = facAnual[2]
   
   
-  # print(media)
   MAPEMedia = abs ((mediaH - media) / mediaH)
   MAPEDesvio = abs ((dpH - dp)) / dpH
   # TODO esses valores tao horriveis
   
   
   MAPEFacAnual = sum(abs((facAnualH - facAnual) / facAnualH))/entrada$lagmax
-
+  
   
   final = list(MAPEMedia = MAPEMedia, MAPEDesvio = MAPEDesvio, facAnual = MAPEFacAnual)
   return(final)

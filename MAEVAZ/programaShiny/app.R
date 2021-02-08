@@ -1,5 +1,6 @@
 #Aplicacao
 
+
 # Carregando os arquivos com as funcoes
 
 library(data.table)
@@ -10,6 +11,7 @@ library(RMySQL)
 library(shinyjs)
 library(DT)
 library(GA)
+library(forecast)
 
 
 source('auxiliar.R')
@@ -72,7 +74,6 @@ server <- function (input, output, session) {
   source('server/server-desagregacao.R',local = TRUE)
   
 }
-
 ui <- navbarPage (title = div(img(src="logo.jpg", height='40px',width='40px'), "MAEVAZ"),
   TabEstacoes,      
   TabPMIX,

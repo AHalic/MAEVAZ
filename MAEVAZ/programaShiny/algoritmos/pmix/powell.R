@@ -98,6 +98,6 @@ geraPinicial = function (lags) {
     THT = runif (12*lags[4], -0.5, 0.5)
   
   Pinicial = c (phi, tht, PHI, THT)
-  
+  print(Pinicial)
   return (Pinicial)
 }

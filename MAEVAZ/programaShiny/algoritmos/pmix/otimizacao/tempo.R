@@ -4,9 +4,10 @@
 NSGA = function (serieH, lags, nP, Pc, Pm, cicloMAX, MAXDiferenca, nS) {
   entrada = entrada (serieH)
   saidasPMIX = PMIXs (entrada$serieHN, lags, nP)
+  # print(saidasPMIX)
   parametrosIniciais = sapply (saidasPMIX, function (x) x$parametros)
   parametrosIniciais = t (parametrosIniciais)
-
+  # print(parametrosIniciais)
   populacao = geraPopulacao (entrada, lags, parametrosIniciais, nP, nS)
   # print(populacao[[10]])
   populacao = CCO (populacao)
@@ -15,7 +16,7 @@ NSGA = function (serieH, lags, nP, Pc, Pm, cicloMAX, MAXDiferenca, nS) {
   
   # print(populacao)
   # print(MAPEdiferenca(populacao))
-  print(MAXDiferenca)
+  # print(MAXDiferenca)
   while ((ciclo < cicloMAX) && (MAPEdiferenca (populacao) > MAXDiferenca)) {
     ciclo = ciclo + 1
     novaPopulalacao = geraCruzamento (entrada, lags, populacao, Pc, Pm, nP, nS)
@@ -45,9 +46,9 @@ MAPEdiferenca = function (populacao) {
   
   MAPE = lapply (populacao, function (x)
                                    abs ((individuo - x$individuo) / individuo))
-  print(MAPE)
+  # print(MAPE)
   MAPEdif = sum (unlist (MAPE)) / (nP * (length (individuo)))
-  print(MAPEdif)
+  # print(MAPEdif)
   
   if (is.finite (MAPEdif))
     return (MAPEdif)

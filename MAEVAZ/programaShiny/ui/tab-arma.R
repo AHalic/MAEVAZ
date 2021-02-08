@@ -36,7 +36,7 @@ TabARMA = tabPanel("Modelo ARMA",
                      column(width = 6,numericInput ("MAPEavaliacaoArma", label = "MAPEavaliacao", value = 20, min = 0, max = 100))
                    ),
                    fluidRow(
-                     column (width = 6,numericInput ("lagAnualArma", label = "lag Anual", value = 1, min = 1, max = 12)),
+                     width = 4,numericInput ("lagAnualArma", label = "lag Anual", value = 1, min = 1, max = 12),
                    ),
                    checkboxInput ("lagSignificativoArma", "Lag Significativo", TRUE)
                )),

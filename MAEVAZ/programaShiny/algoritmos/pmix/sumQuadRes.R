@@ -83,6 +83,7 @@ residuos = function (serie, parametros, lags) {
   residuo = matrix (residuo, ncol = ncol (serie), byrow = T)
   
   dpRes = apply (residuo, 2, sd)
+
   somQuadRes = sum (residuo * residuo)
   
   final = list (somRes = somQuadRes, dpRes = dpRes)

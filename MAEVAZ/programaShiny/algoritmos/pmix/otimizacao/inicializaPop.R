@@ -5,6 +5,7 @@ geraIndividuo = function (entrada, lags, nS) {
   individuoMIN = -1
   individuoMAX = 1
   individuo = runif (nINDIVIDUO, individuoMIN, individuoMAX)
+  # print(individuo)
   momentos = momentos (entrada, individuo, lags, nS)
   
   while (estouro (momentos)) {

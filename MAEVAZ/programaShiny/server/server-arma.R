@@ -39,7 +39,7 @@ resultados_ARMA = reactive({
     isolate (cenarioSinteticoAnual(serieHist_ARMA(),c(input$p_ARMA,input$q_ARMA),input$nsint_ARMA, 
                                    input$type, c(input$nPopArma, input$cicloMaxArma, input$pCA, input$pMA,
                                                  input$MAPEdiferencaMAXArma, input$MAPEavaliacaoArma,
-                                                 input$lagAnualArma, input$lagMensalArma, input$lagSignificativoArma)))
+                                                 input$lagAnualArma, input$lagSignificativoArma)))
 })
 
 # Serie gerada pelo MODELO ARMA
@@ -78,17 +78,19 @@ observeEvent(input$goButton_ARMA,{
     print (somaRes_ARMA())
   })
   
+  # In case of selecting GA
   if(input$type == 2){
     showTab(inputId = "tabs", target = "Avaliação séries")
     shinyjs::show("plotly_avaliacoes_arma")
     
+    # Ploting the 3D graphic of ga
     output$grafico_avaliacoes_arma = renderPlotly({
       dadosArma = data.frame (resultados_ARMA( )$avaliacao)
   
       dadosArma$X = 1:nrow(dadosArma)
       ddArma = replicate(2, dadosArma, simplify = F)
 
-      plot_ly(color = I("blue"), showlegend = F, text = ~X,
+      plot_ly(color = I("steelblue"), showlegend = F, text = ~X,
               hovertemplate = paste(
                 "<b>Serie: %{text}</b><br>",
                 "facAnual: %{x}<br>",
@@ -99,7 +101,7 @@ observeEvent(input$goButton_ARMA,{
         add_markers(data = dadosArma, x = ~facAnual, y = ~MAPEMedia, z = ~MAPEDesvio)
     })
 
-    
+    # Show tabel containing MAPE mean, MAPE sd and acf 
     output$tabelaAvaliacaoArma = renderDataTable({
       avaliacoesarma = data.frame (resultados_ARMA( )$avaliacao)
       colnames (avaliacoesarma) = c ("MAPE media", "MAPE desvio", "Fac Anual")
@@ -121,6 +123,7 @@ observeEvent(input$goButton_ARMA,{
     })
 })
 
+# if cleaning button was pressed
 observeEvent(input$limparButton_ARMA,{
   shinyjs::enable("goButton_ARMA")
   shinyjs::enable("type")
@@ -190,8 +193,8 @@ observe ({
                       selected = 1)
   }else {
     updateSelectInput (session, "nSerieArma",
-                       choices = 1:input$nPop,
-                       selected = input$nPop)
+                       choices = 1:input$nPopArma,
+                       selected = input$nPopArma)
   }
 })
 
