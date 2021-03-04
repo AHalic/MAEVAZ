@@ -276,12 +276,12 @@ avaliacoes = function(entrada, sintetico, media, dp){
   
   MAPEMedia = abs ((mediaH - media) / mediaH)
   MAPEDesvio = abs ((dpH - dp)) / dpH
-  # TODO esses valores tao horriveis
   
   
+  # TODO: seria o MAPEFacAnual ou apenas o facAnual?
   MAPEFacAnual = sum(abs((facAnualH - facAnual) / facAnualH))/entrada$lagmax
   
   
-  final = list(MAPEMedia = MAPEMedia, MAPEDesvio = MAPEDesvio, facAnual = MAPEFacAnual)
+  final = list(MAPEMedia = MAPEMedia, MAPEDesvio = MAPEDesvio, facAnual = facAnual)
   return(final)
 }
