@@ -81,8 +81,6 @@ ARMA = function (serieAnual, lags) {
   #  c = media*(1 - sum(parametros ar))
   modelo = arima0 (ts (serieAnual), order = c (lags[1], 0, lags[2]), seasonal = list (order = c (0, 0, 0), period = NA),
                   xreg = NULL, include.mean = TRUE, delta = 0.01, transform.pars = TRUE, fixed = NULL, init = NULL, method = "ML")
-  teste = auto.arima(serieAnual)
-  print(teste)
   
   parametros = as.vector (modelo$coef)
 
@@ -117,7 +115,7 @@ serieSinteticaAnual = function (parametros, dpRes, c, lags, n) {
     tht = parametros[limInf : limSup]
   }
   
-  # TODO: a constante so é igual a media qnd ar != 0
+  # TODO: a constante so é igual a media quando ar != 0
   if(p != 0)
     c = c*(1- sum(phi))
   
@@ -141,8 +139,7 @@ serieSinteticaAnual = function (parametros, dpRes, c, lags, n) {
     # TODO: mm n deveria estar subtraindo?
     serieS[v] = c + auto + mm + residuoS[v]
   }
-  # print(mean(serieS))
-  # print(c)
+  
   return (serieS)
 }
 
@@ -182,7 +179,6 @@ residuos_ARMA = function(serie, parametros, lags, n, t, entrada, constante){
     if (p > 0) {
       for (i in (1:p))
         auto = auto + phi[i]*serieAux[v-i]
-        # print(auto)
     }
     if (q > 0) {
       for (j in (1:q))
@@ -194,19 +190,14 @@ residuos_ARMA = function(serie, parametros, lags, n, t, entrada, constante){
 
 
   dpRes = sd(residuo)
-  # print(dpRes)
   somQuadRes = sum (residuo * residuo)
-  # print(somQuadRes)
+
   serieS = serieSinteticaAnual(parametros, dpRes, constante, lags, n)
 
   serieS = serieS* entrada$dpHL + entrada$mediaHL
 
   serieS = exp(serieS)
-  
-  # print("---------")
-  # print(parametros)
-  # print(somQuadRes)
-  # print("---------")
+
 
   if(t == 1){
     final = list(dpRes = dpRes, somQuadRes = somQuadRes, residuo = residuo, serieS = serieS)
@@ -223,17 +214,16 @@ residuos_ARMA = function(serie, parametros, lags, n, t, entrada, constante){
     return(MAPEMedia)
   }
   
+  facAnual = acf (serieS, lag.max = entrada$lagmax, type = c ("correlation"), plot = F, na.action = na.pass)
+  facAnual = as.numeric (facAnual$acf)
+  facAnual = facAnual[2]
+  
   return(somQuadRes)
+  return(facAnual)
 }
 
-post = function(x){
-  print(x@population) 
-  return(x)
-}
 
 AG_ARMA = function(serieHN, lags, ag, n, entrada, inicio, constante){
-  # print(constante)
-  # print(inicio)
   tampop = ag[1]
   ciclomax = ag[2]
   probC = ag[3]
@@ -241,6 +231,7 @@ AG_ARMA = function(serieHN, lags, ag, n, entrada, inicio, constante){
   
 
   
+  # Criando população inicial a partir de arima
   low = c()
   up = c()
   for(i in 1:length(inicio)){
@@ -252,34 +243,23 @@ AG_ARMA = function(serieHN, lags, ag, n, entrada, inicio, constante){
       low = append(low, -inicio[i])
       up = append(up, inicio[i])   
     }
-    # low = append(low, -1)
-    # up = append(up, 1) 
   }
   
   sugestao = matrix(inicio, ncol = length(inicio),  byrow = TRUE, nrow = tampop-1)
  
-    # TODO falta algo no ga
-  silent = capture.output({
-    modelo = ga(type = "real-valued", fitness = function(x) -residuos_ARMA(serieHN, x, lags, n, 2, entrada, constante), lower = low, upper = up, popSize = tampop, 
+  
+  modelo = ga(type = "real-valued", fitness = function(x) -residuos_ARMA(serieHN, x, lags, n, 0, entrada, constante), lower = low, upper = up, popSize = tampop,
                   maxiter = ciclomax, pcrossover = probC/100, pmutation = probM/100,
-                  suggestions = sugestao, run = 30, keepBest = TRUE, selection =  gareal_tourSelection)
-  })
+                  suggestions = sugestao, run = 100, keepBest = TRUE, selection =  gareal_tourSelection, monitor = NULL)
 
-  # print(modelo)
-  print("------------------------------")
-  print(modelo@population)
-  print("------------------------------")
   
 
-  modelo = ga(type = "real-valued", fitness = function(x) -residuos_ARMA(serieHN, x, lags, n, 0, entrada, constante), lower = low, upper = up, popSize = tampop, 
-              maxiter = ciclomax, pcrossover = probC/100, pmutation = probM/100,
-              suggestions = modelo@population, run = 70, keepBest = TRUE, selection =  gareal_tourSelection, monitor = NULL)
+  # modelo = ga(type = "real-valued", fitness = function(x) -residuos_ARMA(serieHN, x, lags, n, 0, entrada, constante), lower = low, upper = up, popSize = tampop, 
+  #             maxiter = ciclomax, pcrossover = probC/100, pmutation = probM/100,
+  #             suggestions = modelo@population, run = 70, keepBest = TRUE, selection =  gareal_tourSelection, monitor = NULL)
   
-  print("------------------------------")
-  print(modelo@population)
-  print("------------------------------")
   
-  final = list(population = modelo@population)
+  final = list(population = modelo@population, ciclos = modelo@iter)
   return(final)
 }
 

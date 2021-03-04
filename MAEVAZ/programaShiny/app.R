@@ -1,6 +1,5 @@
 #Aplicacao
 
-
 # Carregando os arquivos com as funcoes
 
 library(data.table)
@@ -74,7 +73,7 @@ server <- function (input, output, session) {
   source('server/server-desagregacao.R',local = TRUE)
   
 }
-ui <- navbarPage (title = div(img(src="logo.jpg", height='40px',width='40px'), "MAEVAZ"),
+ui <- navbarPage (title = div(img(src="logo.jpg", height='40px',width='40px', style="margin-top: -10px"), "MAEVAZ"),
   TabEstacoes,      
   TabPMIX,
   TabARMA,
