@@ -9,10 +9,12 @@ momentos = function (entrada, parametros, lags, nS) {
   serieSint = serieSintetica (parametros, dpRes, lags, nS)
   serieSint = t ((t (serieSint) * entrada$dpHL) + entrada$mediaHL)
   serieSint = exp (serieSint)
+  # print(serieSint)
   
   media = apply (serieSint, 2, mean)
-  # print(serieSint)
+  # print("------------------------aqui------------------------")
   # print(media)
+  # print("------------------------depois------------------------")
   dp = apply (serieSint, 2, sd)
   # print(dp)
   serieAnual = apply (serieSint, 1, sum)
@@ -28,12 +30,14 @@ momentos = function (entrada, parametros, lags, nS) {
 avaliacao = function (entrada, momentosS) {
   mediaH = entrada$mediaH
   dpH = entrada$dpH
+  
   facAnualH = entrada$facAnual[-1]
   facAnualH = facAnualH[-((entrada$lagAnual + 1):12)]
   facMensalH = entrada$facMensal[-1, ]
   facMensalH = facMensalH[-((entrada$lagMensal + 1):12), ]
   MAPEMedia = sum (abs ((mediaH - momentosS$media) / mediaH)) / 12
   MAPEDesvio = sum (abs ((dpH - momentosS$dp)) / dpH) / 12
+
   MAPEFacAnual = sum (abs ((facAnualH - momentosS$facAnual) / facAnualH)) / entrada$lagAnual
   MAPEFacMensal = sum (abs ((facMensalH - momentosS$facMensal) / facMensalH)) / ((entrada$lagMensal)*12)
   somRes = momentosS$somRes

@@ -76,10 +76,10 @@ PMIXs = function (serie, lags, n) {
   p = 1:n
   Pinicial = lapply (p, function (x)
                         geraPinicial (lags))
-  # print(Pinicial)
+  
   saidas = lapply (Pinicial, function (x)
                              powell (serie, lags, x))
-  # print(saidas)
+  
   return (saidas)
 }
 

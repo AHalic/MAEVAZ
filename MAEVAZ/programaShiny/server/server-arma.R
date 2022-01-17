@@ -59,11 +59,29 @@ acfAnualARMA <- callModule(facAnual,"ARMA",serieHistAnual_ARMA,serieSint_ARMA)
 hurstAnualARMA <- callModule(coeficienteHurst,"ARMA","Anual",serieHistAnual_ARMA,serieSint_ARMA)
 volumeARMA <- callModule(volume,"ARMA",FALSE,serieHistAnual_ARMA,serieSint_ARMA)
 
+output$resultadoGeralARMA = renderPrint ({
+  # if (input$iniciar == 0)
+  #   return ("Aguardando inicio...")
+  if (input$type == 1) {
+    print("Método dos Momentos")
+  } 
+  if (input$type == 2) {
+    duracao = resultados_ARMA( )$duracao
+    print("Algoritmo Genetico")
+    
+    print (paste ("Duracao:", duracao, "seg"))
+    ciclos = resultados_ARMA( )$ciclos
+    print (paste ("ciclos: ", ciclos))
+  }
+})
+
 somaRes_ARMA = reactive({ 
   residuos = resultados_ARMA()$residuos
+  
   if(input$type == 2){
     residuos = residuos[[as.numeric(input$nSerieArma)]]
   }
+  
   somRes = sum(residuos^2)
 })
 
@@ -71,6 +89,7 @@ observeEvent(input$goButton_ARMA,{
   hideTab(inputId = "tabs", target = "Avaliação séries")
   shinyjs::enable("limparButton_ARMA")
   shinyjs::disable("goButton_ARMA")
+  shinyjs::disable("nPopArma")
   shinyjs::show("resultados_ARMA")
   shinyjs::disable("type")
   
@@ -85,26 +104,25 @@ observeEvent(input$goButton_ARMA,{
     
     # Ploting the 3D graphic of ga
     output$grafico_avaliacoes_arma = renderPlotly({
-      dadosArma = data.frame (resultados_ARMA( )$avaliacao)
-  
+      dadosArma = data.frame (resultados_ARMA( )$avaliacao[,-4])
       dadosArma$X = 1:nrow(dadosArma)
       ddArma = replicate(2, dadosArma, simplify = F)
 
       plot_ly(color = I("steelblue"), showlegend = F, text = ~X,
               hovertemplate = paste(
                 "<b>Serie: %{text}</b><br>",
-                "facAnual: %{x}<br>",
-                "MAPEMedia: %{y}<br>",
+                "MAPEfacAnual: %{x}<br>",
+                "MAPEmedia: %{y}<br>",
                 "MAPEDesvio: %{z}",
                 "<extra></extra>"
               )) %>%
-        add_markers(data = dadosArma, x = ~facAnual, y = ~MAPEMedia, z = ~MAPEDesvio)
+        add_markers(data = dadosArma, x = ~MAPEfacAnual, y = ~MAPEmedia, z = ~MAPEdp)
     })
 
     # Show tabel containing MAPE mean, MAPE sd and acf 
     output$tabelaAvaliacaoArma = renderDataTable({
       avaliacoesarma = data.frame (resultados_ARMA( )$avaliacao)
-      colnames (avaliacoesarma) = c ("MAPE media", "MAPE desvio", "Fac Anual")
+      colnames (avaliacoesarma) = c ("MAPE media", "MAPE desvio", "Fac Anual", "SomRes")
       rownames(avaliacoesarma) = paste("Serie", 1:input$nPopArma)
       return (datatable (avaliacoesarma))
     })
@@ -128,6 +146,7 @@ observeEvent(input$limparButton_ARMA,{
   shinyjs::enable("goButton_ARMA")
   shinyjs::enable("type")
   shinyjs::disable("limparButton_ARMA")
+  shinyjs::enable("nPopArma")
   shinyjs::hide("resultados_ARMA")
   shinyjs::enable("armazenarButton_ARMA")
   shinyjs::reset("resultados_ARMA")

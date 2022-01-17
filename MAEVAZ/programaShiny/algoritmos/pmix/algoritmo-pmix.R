@@ -1,6 +1,3 @@
-#source('cenarioSintetico.R')
-#source('powell.R')
-#source('otimizacao/tempo.R')
 
 # Utiliza funcoes que estao nas pastas "analise","modelo" e "otimizacao"
 # Algoritmo do modelo pmix
@@ -13,6 +10,7 @@ algoritmo = function (input,serieH) {
     fim = Sys.time ( )
     parametrosIniciais = c (rep (1, 12*lags[1]), rep (0, 12*lags[2]), rep (1, 12*lags[3]), rep (0, 12*lags[4]))
     parametros = arquivos$parametros
+    print(parametros)
     series = cenarioSintetico (serieH(), arquivos$parametros, lags, input$nsint)
     avaliacoes = arquivos$parametros
     algoritmo = list (ciclos = arquivos$ciclos, somRes = arquivos$somRes)
@@ -26,6 +24,7 @@ algoritmo = function (input,serieH) {
     
     parametrosIniciais = arquivos$arquivoParametrosIniciais
     parametros = arquivos$arquivoParametros
+    print(parametros)
     series = lapply(arquivos$arquivosSeries, as.matrix)
     avaliacoes = arquivos$arquivoAvaliacoes
     # print(avaliacoes)

@@ -33,7 +33,7 @@ TabARMA = tabPanel("Modelo ARMA",
                    ),
                    fluidRow(
                      column (width = 6,numericInput ("MAPEdiferencaMAXArma", label = "MAPEdiferencaMAX", value = 5, min = 0, max = 100)),
-                     column(width = 6,numericInput ("MAPEavaliacaoArma", label = "MAPEavaliacao", value = 20, min = 0, max = 100))
+                     column(width = 6,numericInput ("MAPEavaliacaoArma", label = "MAPEavaliacao", value = 10, min = 0, max = 100))
                    ),
                    fluidRow(
                      width = 4,numericInput ("lagAnualArma", label = "lag Anual", value = 1, min = 1, max = 12),
@@ -58,6 +58,7 @@ TabARMA = tabPanel("Modelo ARMA",
            mainPanel(
              shinyjs::hidden(
                div(id="resultados_ARMA",
+                   verbatimTextOutput ("resultadoGeralARMA"),
                    h3 (strong ("Resultados"),align = "center"),
                    shinyjs::hidden(
                      div(id="plotly_avaliacoes_arma",

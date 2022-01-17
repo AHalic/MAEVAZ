@@ -41,15 +41,12 @@ geraPopulacao = function (entrada, lags, parametrosIniciais, nP, nS) {
   
   else {
     p = 1:((length(parametrosIniciais)) / (12*(sum (lags))))
-    # print(parametrosIniciais)
     
     populacao = lapply (p, function (x)
                            avaliaIndividuo (entrada, lags, parametrosIniciais[x, ], nS))
-    # print(populacao[[10]])
+
     populacao = populacao[lengths(populacao) != 0]
-    # print(populacao[[10]])
-  
-    # 0.7887616 0.6427017 0.7245622 0.55332 0.8537521 0.8952665 0.9555897 0.97924 0.952858 0.9612083 0.8932456 0.8832840
+    
     if ((length (populacao)) < nP) {
       n = nP - (length (populacao))
       populacao = completaPopulacao (entrada, lags, populacao, n, nS)

@@ -9,8 +9,9 @@ library(plotly)
 library(RMySQL)
 library(shinyjs)
 library(DT)
-library(GA)
+# library(GA)
 library(forecast)
+# library(nsga2R)
 
 
 source('auxiliar.R')
@@ -47,6 +48,11 @@ source('algoritmos/pmix/otimizacao/avaliacao.R')
 source('algoritmos/pmix/otimizacao/inicializaPop.R')
 source('algoritmos/pmix/otimizacao/mecanismos.R')
 source('algoritmos/pmix/otimizacao/tempo.R')
+
+source('algoritmos/arma/otimizacao/avaliacao.R')
+source('algoritmos/arma/otimizacao/inicializaPop.R')
+source('algoritmos/arma/otimizacao/mecanismos.R')
+source('algoritmos/arma/otimizacao/tempo.R')
 
 # Shiny Server
 # Fonte: https://shiny.rstudio.com/articles/scoping.html

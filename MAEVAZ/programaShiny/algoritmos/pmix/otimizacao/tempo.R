@@ -4,7 +4,7 @@
 NSGA = function (serieH, lags, nP, Pc, Pm, cicloMAX, MAXDiferenca, nS) {
   entrada = entrada (serieH)
   saidasPMIX = PMIXs (entrada$serieHN, lags, nP)
-  # print(saidasPMIX)
+  
   parametrosIniciais = sapply (saidasPMIX, function (x) x$parametros)
   parametrosIniciais = t (parametrosIniciais)
   # print(parametrosIniciais)
@@ -26,6 +26,9 @@ NSGA = function (serieH, lags, nP, Pc, Pm, cicloMAX, MAXDiferenca, nS) {
   }
   
   arquivoParametrosIniciais = arquivoParametrosIniciais (saidasPMIX, lags)
+  # print(arquivoParametrosIniciais)
+  # print("------------------------")
+  # print(saidasPMIX)
   arquivosSeries = arquivosSeries (populacao)
   arquivoParametros = arquivoParametros (populacao, lags)
   arquivoAvaliacoes = arquivoAvaliacoes (populacao)
@@ -42,7 +45,7 @@ MAPEdiferenca = function (populacao) {
   nP = length (populacao)
   a = round (runif (1, 1, nP))
   individuo = populacao[[a]]$individuo
-  
+  # print(individuo)
   
   MAPE = lapply (populacao, function (x)
                                    abs ((individuo - x$individuo) / individuo))
@@ -58,8 +61,10 @@ MAPEdiferenca = function (populacao) {
 
 arquivoParametrosIniciais = function (saidasPMIX, lags) {
   p = 1:length (saidasPMIX)
+  # print(p)
   parametros = t (sapply (p, function (x) c (saidasPMIX[[x]]$ciclos, saidasPMIX[[x]]$somRes, saidasPMIX[[x]]$parametros)))
   parametros = data.frame (parametros)
+  # print(parametros)
   colnames (parametros) = c ("Ciclos", "SomRes", nomesLags (lags))
   return (parametros)
 }
